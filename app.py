@@ -240,9 +240,9 @@ with tab3:
         st.write(f"Je soussigné(e) certifie que les renseignements ci-dessus sont sincères et véritables.")
         st.write(f"Fait à Limoges, le {st.date_input('Date de signature', key=f'date_sig_garant_{i}')}")
         
-        # Zone de signature
+        # Zone de signature manuscrite garant
         st.write("Signez ci-dessous :")
-        signature = st_canvas(
+        signature_garant = st_canvas(
             fill_color="rgba(255, 165, 0, 0.3)",
             stroke_width=2,
             stroke_color="black",
