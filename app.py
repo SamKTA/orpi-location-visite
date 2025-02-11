@@ -137,15 +137,18 @@ with tab2:
         st.write(f"Fait à Limoges, le {st.date_input('Date de signature', key=f'date_sig_loc_{i}')}")
         
         # Zone de signature
-        st.write("Signez ci-dessous :")
+         st.write("Signez ci-dessous :")
         signature = st_canvas(
-            fill_color="rgba(255, 165, 0, 0.3)",
-            stroke_width=2,
-            stroke_color="black",
-            background_color="white",
-            height=150,
-            drawing_mode="freedraw",
-            key=f"signature_canvas_loc_{i}",
+            fill_color="rgba(255, 165, 0, 0.3)",  # couleur de remplissage
+            stroke_width=2,                        # épaisseur du trait
+            stroke_color="#000000",                # couleur du trait
+            background_color="#ffffff",            # fond blanc
+            width=600,                            # largeur du canvas
+            height=150,                           # hauteur du canvas
+            drawing_mode="freedraw",              # mode dessin libre
+            point_display_radius=0,               # pas de points d'affichage
+            key=f"signature_canvas_{i}",          # clé unique
+            update_streamlit=True                 # mise à jour en temps réel
         )
 
 # Onglet Garants
@@ -241,15 +244,18 @@ with tab3:
         st.write(f"Fait à Limoges, le {st.date_input('Date de signature', key=f'date_sig_garant_{i}')}")
         
         # Zone de signature manuscrite garant
-        st.write("Signez ci-dessous :")
-        signature_garant = st_canvas(
-            fill_color="rgba(255, 165, 0, 0.3)",
-            stroke_width=2,
-            stroke_color="black",
-            background_color="white",
-            height=150,
-            drawing_mode="freedraw",
-            key=f"signature_canvas_garant_{i}",
+         st.write("Signez ci-dessous :")
+        signature = st_canvas(
+            fill_color="rgba(255, 165, 0, 0.3)",  # couleur de remplissage
+            stroke_width=2,                        # épaisseur du trait
+            stroke_color="#000000",                # couleur du trait
+            background_color="#ffffff",            # fond blanc
+            width=600,                            # largeur du canvas
+            height=150,                           # hauteur du canvas
+            drawing_mode="freedraw",              # mode dessin libre
+            point_display_radius=0,               # pas de points d'affichage
+            key=f"signature_canvas_{i}",          # clé unique
+            update_streamlit=True                 # mise à jour en temps réel
         )
 
 # Mentions légales en bas de page
