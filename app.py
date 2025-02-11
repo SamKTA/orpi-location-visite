@@ -52,7 +52,7 @@ with tab2:
     nb_locataires = st.radio("Nombre de candidats", [1, 2], horizontal=True)
     
     # Création d'un formulaire par locataire
-    for i in range(nb_locataires):
+    for i in range(int(nb_locataires)):
         st.subheader(f"Candidat {i+1}")
         
         # Situation familiale
@@ -132,25 +132,24 @@ with tab2:
             total_revenus = revenus + autres_revenus
             st.write("Total des revenus :", total_revenus, "€")
 
-        # Signature
-        st.write(f"Je soussigné(e) certifie que les renseignements ci-dessus sont sincères et véritables.")
-st.write(f"Fait à Limoges, le {st.date_input('Date de signature', key=f'date_sig_loc_{i}')}")
+    # Zone signature(s) après tous les formulaires
+    st.subheader("Signature(s)")
+    st.write("Je (nous) soussigné(e)(s) certifie(ons) que les renseignements ci-dessus sont sincères et véritables.")
+    st.write(f"Fait à Limoges, le {st.date_input('Date de signature', key='date_sig_loc')}")
 
-# Zone de signature manuscrite
-st.write("Signez ci-dessous :")
-signature_locataire = st_canvas(
-    fill_color="rgba(255, 165, 0, 0.3)",
-    stroke_width=2,
-    stroke_color="#000000",
-    background_color="#ffffff",
-    width=600,
-    height=150,
-    drawing_mode="freedraw",
-    point_display_radius=0,
-    key=f"signature_canvas_loc_{i}",
-    update_streamlit=True
-)
-
+    # Afficher une ou deux zones de signature selon le nombre de locataires
+    for i in range(int(nb_locataires)):
+        st.write(f"Signature candidat {i+1} :")
+        signature_locataire = st_canvas(
+            fill_color="rgba(255, 165, 0, 0.3)",
+            stroke_width=2,
+            stroke_color="#000000",
+            background_color="#ffffff",
+            width=600,
+            height=150,
+            drawing_mode="freedraw",
+            key=f"signature_canvas_loc_{i}",
+        )
 
 # Onglet Garants
 with tab3:
@@ -160,9 +159,10 @@ with tab3:
     nb_garants = st.radio("Nombre de garants", [1, 2], horizontal=True)
     
     # Création d'un formulaire par garant
-    for i in range(nb_garants):
+    for i in range(int(nb_garants)):
         st.subheader(f"Garant {i+1}")
         
+        # [Même structure que pour les locataires...]
         # Situation familiale
         st.subheader("Situation familiale")
         situation_garant = st.selectbox(
@@ -240,24 +240,24 @@ with tab3:
             total_revenus_garant = revenus_garant + autres_revenus_garant
             st.write("Total des revenus :", total_revenus_garant, "€")
 
-        # Signature garant
-st.write(f"Je soussigné(e) certifie que les renseignements ci-dessus sont sincères et véritables.")
-st.write(f"Fait à Limoges, le {st.date_input('Date de signature', key=f'date_sig_garant_{i}')}")
+    # Zone signature(s) après tous les formulaires garants
+    st.subheader("Signature(s)")
+    st.write("Je (nous) soussigné(e)(s) certifie(ons) que les renseignements ci-dessus sont sincères et véritables.")
+    st.write(f"Fait à Limoges, le {st.date_input('Date de signature', key='date_sig_garant')}")
 
-# Zone de signature manuscrite
-st.write("Signez ci-dessous :")
-signature_garant = st_canvas(
-    fill_color="rgba(255, 165, 0, 0.3)",
-    stroke_width=2,
-    stroke_color="#000000",
-    background_color="#ffffff",
-    width=600,
-    height=150,
-    drawing_mode="freedraw",
-    point_display_radius=0,
-    key=f"signature_canvas_garant_{i}",
-    update_streamlit=True
-)
+    # Afficher une ou deux zones de signature selon le nombre de garants
+    for i in range(int(nb_garants)):
+        st.write(f"Signature garant {i+1} :")
+        signature_garant = st_canvas(
+            fill_color="rgba(255, 165, 0, 0.3)",
+            stroke_width=2,
+            stroke_color="#000000",
+            background_color="#ffffff",
+            width=600,
+            height=150,
+            drawing_mode="freedraw",
+            key=f"signature_canvas_garant_{i}",
+        )
 
 # Mentions légales en bas de page
 st.markdown("---")
