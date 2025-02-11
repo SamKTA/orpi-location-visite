@@ -134,9 +134,19 @@ with tab2:
 
         # Signature
         st.write(f"Je soussigné(e) certifie que les renseignements ci-dessus sont sincères et véritables.")
-        st.write(f"Fait à Limoges, le {st.session_state.get('date_signature', '...')}")
-        if st.button("Signer", key=f"signer_locataire_{i}"):
-            st.session_state['date_signature'] = st.date_input("Date de signature", key=f"date_sig_loc_{i}")
+        st.write(f"Fait à Limoges, le {st.date_input('Date de signature', key=f'date_sig_loc_{i}')}")
+        
+        # Zone de signature
+        st.write("Signez ci-dessous :")
+        signature = st_canvas(
+            fill_color="rgba(255, 165, 0, 0.3)",
+            stroke_width=2,
+            stroke_color="black",
+            background_color="white",
+            height=150,
+            drawing_mode="freedraw",
+            key=f"signature_canvas_loc_{i}",
+        )
 
 # Onglet Garants
 with tab3:
@@ -228,9 +238,19 @@ with tab3:
 
         # Signature garant
         st.write(f"Je soussigné(e) certifie que les renseignements ci-dessus sont sincères et véritables.")
-        st.write(f"Fait à Limoges, le {st.session_state.get('date_signature_garant', '...')}")
-        if st.button("Signer", key=f"signer_garant_{i}"):
-            st.session_state['date_signature_garant'] = st.date_input("Date de signature", key=f"date_sig_garant_{i}")
+        st.write(f"Fait à Limoges, le {st.date_input('Date de signature', key=f'date_sig_garant_{i}')}")
+        
+        # Zone de signature
+        st.write("Signez ci-dessous :")
+        signature = st_canvas(
+            fill_color="rgba(255, 165, 0, 0.3)",
+            stroke_width=2,
+            stroke_color="black",
+            background_color="white",
+            height=150,
+            drawing_mode="freedraw",
+            key=f"signature_canvas_garant_{i}",
+        )
 
 # Mentions légales en bas de page
 st.markdown("---")
