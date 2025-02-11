@@ -1,4 +1,5 @@
 import streamlit as st
+from streamlit_drawable_canvas import st_canvas
 
 # Configuration de la page
 st.set_page_config(page_title="Formulaire de Location", layout="wide")
