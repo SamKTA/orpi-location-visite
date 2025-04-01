@@ -1,5 +1,14 @@
 import streamlit as st
 from streamlit_drawable_canvas import st_canvas
+from fpdf import FPDF
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
+from email.mime.text import MIMEText
+from email.utils import formatdate
+from email import encoders
+import io
+import base64
 
 # Configuration de la page
 st.set_page_config(page_title="Formulaire de Location", layout="wide")
@@ -20,6 +29,9 @@ with tab1:
         nom_conseiller = st.text_input("Nom complet")
     with col2:
         tel_conseiller = st.text_input("Téléphone")
+    
+    # Ajout du champ email conseiller
+    email_conseiller = st.text_input("Email conseiller")
     
     # Désignation du bien
     st.subheader("Désignation et situation du bien proposé à la location")
@@ -162,7 +174,6 @@ with tab3:
     for i in range(int(nb_garants)):
         st.subheader(f"Garant {i+1}")
         
-        # [Même structure que pour les locataires...]
         # Situation familiale
         st.subheader("Situation familiale")
         situation_garant = st.selectbox(
@@ -268,3 +279,65 @@ de rectification et de suppression des informations qui les concernent. Pour exe
 """)
 
 st.warning("Important : tout dossier incomplet ne peut être soumis à l'étude pour validation.")
+
+# Fonction pour générer le PDF
+def generer_pdf():
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+    
+    # Titre
+    pdf.set_font("Arial", "B", 16)
+    pdf.cell(200, 10, "Formulaire de Location", ln=True, align="C")
+    pdf.ln(10)
+    
+    # Informations conseiller
+    pdf.set_font("Arial", "B", 14)
+    pdf.cell(200, 10, "Informations Conseiller", ln=True)
+    pdf.set_font("Arial", size=12)
+    pdf.cell(200, 10, f"Nom complet: {nom_conseiller}", ln=True)
+    pdf.cell(200, 10, f"Téléphone: {tel_conseiller}", ln=True)
+    pdf.cell(200, 10, f"Email: {email_conseiller}", ln=True)
+    
+    # Bien immobilier
+    pdf.set_font("Arial", "B", 14)
+    pdf.cell(200, 10, "Désignation et situation du bien", ln=True)
+    pdf.set_font("Arial", size=12)
+    pdf.cell(200, 10, f"Adresse: {adresse}", ln=True)
+    pdf.cell(200, 10, f"Code postal: {code_postal}", ln=True)
+    pdf.cell(200, 10, f"Ville: {ville}", ln=True)
+    
+    # Conditions financières
+    pdf.set_font("Arial", "B", 14)
+    pdf.cell(200, 10, "Conditions financières", ln=True)
+    pdf.set_font("Arial", size=12)
+    pdf.cell(200, 10, f"Loyer mensuel: {loyer} €", ln=True)
+    pdf.cell(200, 10, f"Charges mensuelles: {charges} €", ln=True)
+    pdf.cell(200, 10, f"Dépôt de garantie: {depot} €", ln=True)
+    pdf.cell(200, 10, f"Honoraires: {honoraires} €", ln=True)
+    pdf.cell(200, 10, f"Date d'entrée souhaitée: {date_entree}", ln=True)
+    
+    # Locataires
+    pdf.add_page()
+    pdf.set_font("Arial", "B", 14)
+    pdf.cell(200, 10, "Informations Locataires", ln=True)
+    
+    # Ajouter les infos des locataires et des garants
+    # (Simplifié pour l'exemple)
+    
+    # Retourner le PDF comme chaîne de caractères
+    return pdf.output(dest="S").encode("latin1")
+
+# Fonction pour générer le lien de téléchargement
+def get_pdf_download_link(pdf_bytes, filename):
+    b64 = base64.b64encode(pdf_bytes).decode()
+    href = f'<a href="data:application/pdf;base64,{b64}" download="{filename}">Télécharger le formulaire PDF</a>'
+    return href
+
+# Bouton pour générer et télécharger le PDF
+if st.button("Générer et télécharger le formulaire PDF"):
+    pdf_bytes = generer_pdf()
+    st.markdown(get_pdf_download_link(pdf_bytes, "formulaire_location.pdf"), unsafe_allow_html=True)
+    
+    # Afficher un message de confirmation
+    st.success("Le PDF a été généré avec succès !")
