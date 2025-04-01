@@ -282,62 +282,48 @@ st.warning("Important : tout dossier incomplet ne peut être soumis à l'étude 
 
 # Fonction pour générer le PDF
 def generer_pdf():
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("Arial", size=12)
+    import io
+    from reportlab.pdfgen import canvas
+    from reportlab.lib.pagesizes import letter
+    
+    # Créer un objet BytesIO pour stocker le PDF
+    buffer = io.BytesIO()
+    
+    # Créer le PDF avec ReportLab
+    c = canvas.Canvas(buffer, pagesize=letter)
+    c.setFont("Helvetica-Bold", 16)
     
     # Titre
-    pdf.set_font("Arial", "B", 16)
-    pdf.cell(200, 10, "Formulaire de Location", ln=True, align="C")
-    pdf.ln(10)
+    c.drawString(100, 750, "Formulaire de Location")
     
     # Informations conseiller
-    pdf.set_font("Arial", "B", 14)
-    pdf.cell(200, 10, "Informations Conseiller", ln=True)
-    pdf.set_font("Arial", size=12)
-    pdf.cell(200, 10, f"Nom complet: {nom_conseiller}", ln=True)
-    pdf.cell(200, 10, f"Téléphone: {tel_conseiller}", ln=True)
-    pdf.cell(200, 10, f"Email: {email_conseiller}", ln=True)
+    c.setFont("Helvetica-Bold", 14)
+    c.drawString(50, 700, "Informations Conseiller")
+    c.setFont("Helvetica", 12)
+    c.drawString(50, 680, f"Nom complet: {nom_conseiller}")
+    c.drawString(50, 660, f"Telephone: {tel_conseiller}")
+    c.drawString(50, 640, f"Email: {email_conseiller}")
     
     # Bien immobilier
-    pdf.set_font("Arial", "B", 14)
-    pdf.cell(200, 10, "Désignation et situation du bien", ln=True)
-    pdf.set_font("Arial", size=12)
-    pdf.cell(200, 10, f"Adresse: {adresse}", ln=True)
-    pdf.cell(200, 10, f"Code postal: {code_postal}", ln=True)
-    pdf.cell(200, 10, f"Ville: {ville}", ln=True)
+    c.setFont("Helvetica-Bold", 14)
+    c.drawString(50, 600, "Designation et situation du bien")
+    c.setFont("Helvetica", 12)
+    c.drawString(50, 580, f"Adresse: {adresse}")
+    c.drawString(50, 560, f"Code postal: {code_postal}")
+    c.drawString(50, 540, f"Ville: {ville}")
     
     # Conditions financières
-    pdf.set_font("Arial", "B", 14)
-    pdf.cell(200, 10, "Conditions financières", ln=True)
-    pdf.set_font("Arial", size=12)
-    pdf.cell(200, 10, f"Loyer mensuel: {loyer} €", ln=True)
-    pdf.cell(200, 10, f"Charges mensuelles: {charges} €", ln=True)
-    pdf.cell(200, 10, f"Dépôt de garantie: {depot} €", ln=True)
-    pdf.cell(200, 10, f"Honoraires: {honoraires} €", ln=True)
-    pdf.cell(200, 10, f"Date d'entrée souhaitée: {date_entree}", ln=True)
+    c.setFont("Helvetica-Bold", 14)
+    c.drawString(50, 500, "Conditions financieres")
+    c.setFont("Helvetica", 12)
+    c.drawString(50, 480, f"Loyer mensuel: {loyer} EUR")
+    c.drawString(50, 460, f"Charges mensuelles: {charges} EUR")
+    c.drawString(50, 440, f"Depot de garantie: {depot} EUR")
+    c.drawString(50, 420, f"Honoraires: {honoraires} EUR")
+    c.drawString(50, 400, f"Date d'entree souhaitee: {date_entree}")
     
-    # Locataires
-    pdf.add_page()
-    pdf.set_font("Arial", "B", 14)
-    pdf.cell(200, 10, "Informations Locataires", ln=True)
+    c.showPage()
+    c.save()
     
-    # Ajouter les infos des locataires et des garants
-    # (Simplifié pour l'exemple)
-    
-    # Retourner le PDF comme chaîne de caractères
-    return pdf.output(dest="S").encode("latin1")
-
-# Fonction pour générer le lien de téléchargement
-def get_pdf_download_link(pdf_bytes, filename):
-    b64 = base64.b64encode(pdf_bytes).decode()
-    href = f'<a href="data:application/pdf;base64,{b64}" download="{filename}">Télécharger le formulaire PDF</a>'
-    return href
-
-# Bouton pour générer et télécharger le PDF
-if st.button("Générer et télécharger le formulaire PDF"):
-    pdf_bytes = generer_pdf()
-    st.markdown(get_pdf_download_link(pdf_bytes, "formulaire_location.pdf"), unsafe_allow_html=True)
-    
-    # Afficher un message de confirmation
-    st.success("Le PDF a été généré avec succès !")
+    buffer.seek(0)
+    return buffer.getvalue()
