@@ -327,3 +327,21 @@ def generer_pdf():
     
     buffer.seek(0)
     return buffer.getvalue()
+
+# Ajouter ceci à la fin de votre app.py, après les mentions légales
+st.markdown("---")
+
+# Bouton pour générer et télécharger le PDF
+if st.button("Générer et télécharger le formulaire PDF"):
+    try:
+        pdf_bytes = generer_pdf()
+        st.download_button(
+            label="Télécharger le PDF",
+            data=pdf_bytes,
+            file_name="formulaire_location.pdf",
+            mime="application/pdf"
+        )
+        # Afficher un message de confirmation
+        st.success("Le PDF a été généré avec succès !")
+    except Exception as e:
+        st.error(f"Erreur lors de la génération du PDF: {str(e)}")
