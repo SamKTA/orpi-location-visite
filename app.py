@@ -285,81 +285,213 @@ def generer_pdf():
     import io
     from reportlab.pdfgen import canvas
     from reportlab.lib.pagesizes import letter, A4
-    from reportlab.lib.units import inch
+    from reportlab.lib.units import inch, mm
+    from reportlab.lib import colors
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
     
     # Créer un objet BytesIO pour stocker le PDF
     buffer = io.BytesIO()
     
-    # Créer le PDF avec ReportLab
-    c = canvas.Canvas(buffer, pagesize=A4)
-    width, height = A4
+    # Créer le document avec SimpleDocTemplate pour une meilleure mise en page
+    doc = SimpleDocTemplate(buffer, pagesize=A4, 
+                          rightMargin=20*mm, leftMargin=20*mm,
+                          topMargin=30*mm, bottomMargin=20*mm)
     
-    # Fonction helper pour ajouter du texte
-    y_position = height - 50  # Position verticale initiale
+    # Définir les styles
+    styles = getSampleStyleSheet()
+    styles.add(ParagraphStyle(name='Title',
+                            fontName='Helvetica-Bold',
+                            fontSize=18,
+                            alignment=1,  # 0=left, 1=center, 2=right
+                            spaceAfter=10*mm))
     
-    def add_text(texte, font="Helvetica", size=12, bold=False, new_line=True, indent=0):
-        nonlocal y_position
-        
-        # Vérifier si on doit commencer une nouvelle page
-        if y_position < 50:
-            c.showPage()
-            y_position = height - 50
-        
-        font_name = font + ("-Bold" if bold else "")
-        c.setFont(font_name, size)
-        c.drawString(50 + indent, y_position, texte)
-        
-        if new_line:
-            y_position -= 20  # Espacement de ligne
+    styles.add(ParagraphStyle(name='Heading1',
+                            fontName='Helvetica-Bold',
+                            fontSize=16,
+                            leading=20,
+                            spaceBefore=5*mm,
+                            spaceAfter=5*mm))
     
-    # Titre
-    add_text("Formulaire de Location", size=18, bold=True)
-    y_position -= 20  # Espace supplémentaire après le titre
+    styles.add(ParagraphStyle(name='Heading2',
+                            fontName='Helvetica-Bold',
+                            fontSize=14,
+                            leading=18,
+                            spaceBefore=3*mm,
+                            spaceAfter=3*mm))
+    
+    styles.add(ParagraphStyle(name='Normal',
+                            fontName='Helvetica',
+                            fontSize=11,
+                            leading=16,
+                            spaceBefore=1*mm,
+                            spaceAfter=1*mm))
+    
+    # Couleur Orpi pour les titres
+    orpi_red = colors.HexColor('#ec1f26')
+    
+    # Liste des éléments à ajouter au PDF
+    elements = []
+    
+    # Fonction pour ajouter un en-tête Orpi à chaque page
+    def add_orpi_header(canvas, doc):
+        canvas.saveState()
+        width, height = A4
+        
+        # Ajouter le texte "Orpi ImmoConseil" en rouge
+        canvas.setFont('Helvetica-Bold', 16)
+        canvas.setFillColor(orpi_red)
+        canvas.drawString(20*mm, height - 15*mm, "Orpi ImmoConseil")
+        
+        # Ajouter une ligne rouge en dessous
+        canvas.setStrokeColor(orpi_red)
+        canvas.setLineWidth(1)
+        canvas.line(20*mm, height - 18*mm, width - 20*mm, height - 18*mm)
+        
+        # Ajouter le numéro de page
+        canvas.setFont('Helvetica', 9)
+        canvas.setFillColor(colors.black)
+        canvas.drawString(width - 30*mm, 15*mm, f"Page {doc.page}")
+        
+        canvas.restoreState()
+    
+    # Titre principal
+    elements.append(Paragraph("Formulaire de Location", styles['Title']))
+    elements.append(Spacer(1, 10*mm))
     
     # --- PARTIE CONSEILLER ---
-    add_text("INFORMATIONS CONSEILLER", size=16, bold=True)
-    add_text(f"Nom complet: {nom_conseiller}")
-    add_text(f"Téléphone: {tel_conseiller}")
-    add_text(f"Email: {email_conseiller}")
-    y_position -= 10
+    elements.append(Paragraph("INFORMATIONS CONSEILLER", styles['Heading1']))
     
-    add_text("Désignation et situation du bien", size=14, bold=True)
-    add_text(f"Adresse: {adresse}")
-    add_text(f"Code postal: {code_postal}")
-    add_text(f"Ville: {ville}")
-    y_position -= 10
+    # Tableau pour les informations du conseiller
+    data = [
+        ["Nom complet:", nom_conseiller],
+        ["Téléphone:", tel_conseiller],
+        ["Email:", email_conseiller]
+    ]
     
-    add_text("Conditions financières", size=14, bold=True)
-    add_text(f"Loyer mensuel: {loyer} EUR")
-    add_text(f"Charges mensuelles: {charges} EUR")
-    add_text(f"Dépôt de garantie: {depot} EUR")
-    add_text(f"Honoraires: {honoraires} EUR")
-    add_text(f"Date d'entrée souhaitée: {date_entree}")
-    y_position -= 20
+    t = Table(data, colWidths=[100, 350])
+    t.setStyle(TableStyle([
+        ('FONT', (0, 0), (-1, -1), 'Helvetica', 11),
+        ('FONT', (0, 0), (0, -1), 'Helvetica-Bold', 11),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
+        ('BOX', (0, 0), (-1, -1), 1, colors.black),
+        ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey)
+    ]))
+    
+    elements.append(t)
+    elements.append(Spacer(1, 5*mm))
+    
+    # Désignation du bien
+    elements.append(Paragraph("Désignation et situation du bien", styles['Heading2']))
+    
+    data = [
+        ["Adresse:", adresse],
+        ["Code postal:", code_postal],
+        ["Ville:", ville]
+    ]
+    
+    t = Table(data, colWidths=[100, 350])
+    t.setStyle(TableStyle([
+        ('FONT', (0, 0), (-1, -1), 'Helvetica', 11),
+        ('FONT', (0, 0), (0, -1), 'Helvetica-Bold', 11),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
+        ('BOX', (0, 0), (-1, -1), 1, colors.black),
+        ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey)
+    ]))
+    
+    elements.append(t)
+    elements.append(Spacer(1, 5*mm))
+    
+    # Conditions financières
+    elements.append(Paragraph("Conditions financières", styles['Heading2']))
+    
+    data = [
+        ["Loyer mensuel:", f"{loyer} €"],
+        ["Charges mensuelles:", f"{charges} €"],
+        ["Dépôt de garantie:", f"{depot} €"],
+        ["Honoraires:", f"{honoraires} €"],
+        ["Date d'entrée souhaitée:", str(date_entree)]
+    ]
+    
+    t = Table(data, colWidths=[150, 300])
+    t.setStyle(TableStyle([
+        ('FONT', (0, 0), (-1, -1), 'Helvetica', 11),
+        ('FONT', (0, 0), (0, -1), 'Helvetica-Bold', 11),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
+        ('BOX', (0, 0), (-1, -1), 1, colors.black),
+        ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey)
+    ]))
+    
+    elements.append(t)
+    
+    elements.append(Spacer(1, 5*mm))
+    elements.append(Paragraph("Attention, le présent document n'est pas une réservation.", 
+                             ParagraphStyle(name='Warning', parent=styles['Normal'], 
+                                           textColor=orpi_red, fontName='Helvetica-Bold')))
+    
+    # Saut de page avant la partie locataires
+    elements.append(Paragraph("<br/><br/><br/>", styles['Normal']))
     
     # --- PARTIE LOCATAIRES ---
-    c.showPage()  # Nouvelle page
-    y_position = height - 50
-    add_text("DOSSIER LOCATAIRES", size=16, bold=True)
-    add_text(f"Nombre de candidats: {nb_locataires}")
-    y_position -= 10
+    elements.append(Paragraph("DOSSIER LOCATAIRES", styles['Heading1']))
+    elements.append(Paragraph(f"Nombre de candidats: {nb_locataires}", styles['Normal']))
+    elements.append(Spacer(1, 5*mm))
     
     # Pour chaque locataire
     for i in range(int(nb_locataires)):
-        add_text(f"CANDIDAT {i+1}", size=14, bold=True)
+        elements.append(Paragraph(f"CANDIDAT {i+1}", styles['Heading2']))
+        elements.append(Spacer(1, 3*mm))
         
         # Situation familiale
-        add_text("Situation familiale", size=12, bold=True)
+        elements.append(Paragraph("Situation familiale", ParagraphStyle(name='SubHeading', 
+                                                                     parent=styles['Heading2'], 
+                                                                     textColor=orpi_red)))
+        
         situation = st.session_state.get(f"situation_{i}", "")
-        add_text(f"État civil: {situation}")
+        data = [["État civil:", situation]]
+        
+        t = Table(data, colWidths=[150, 300])
+        t.setStyle(TableStyle([
+            ('FONT', (0, 0), (-1, -1), 'Helvetica', 11),
+            ('FONT', (0, 0), (0, -1), 'Helvetica-Bold', 11),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
+            ('BOX', (0, 0), (-1, -1), 1, colors.black),
+            ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey)
+        ]))
+        
+        elements.append(t)
+        elements.append(Spacer(1, 3*mm))
         
         # Domicile actuel
-        add_text("Domicile actuel", size=12, bold=True)
+        elements.append(Paragraph("Domicile actuel", ParagraphStyle(name='SubHeading', 
+                                                                 parent=styles['Heading2'], 
+                                                                 textColor=orpi_red)))
+        
         domicile = st.session_state.get(f"domicile_{i}", "")
-        add_text(f"Situation actuelle: {domicile}")
+        data = [["Situation actuelle:", domicile]]
+        
+        t = Table(data, colWidths=[150, 300])
+        t.setStyle(TableStyle([
+            ('FONT', (0, 0), (-1, -1), 'Helvetica', 11),
+            ('FONT', (0, 0), (0, -1), 'Helvetica-Bold', 11),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
+            ('BOX', (0, 0), (-1, -1), 1, colors.black),
+            ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey)
+        ]))
+        
+        elements.append(t)
+        elements.append(Spacer(1, 3*mm))
         
         # Civilité
-        add_text("Civilité", size=12, bold=True)
+        elements.append(Paragraph("Civilité", ParagraphStyle(name='SubHeading', 
+                                                         parent=styles['Heading2'], 
+                                                         textColor=orpi_red)))
+        
         nom = st.session_state.get(f"nom_{i}", "")
         prenom = st.session_state.get(f"prenom_{i}", "")
         nom_jeune_fille = st.session_state.get(f"nom_jf_{i}", "")
@@ -369,38 +501,101 @@ def generer_pdf():
         pays = st.session_state.get(f"pays_{i}", "")
         nationalite = st.session_state.get(f"nationalite_{i}", "")
         
-        add_text(f"Nom: {nom}")
-        add_text(f"Prénom: {prenom}")
-        add_text(f"Nom de jeune fille: {nom_jeune_fille}")
-        add_text(f"Né(e) le: {date_naissance}")
-        add_text(f"Ville de naissance: {ville_naissance}")
-        add_text(f"Département: {departement}")
-        add_text(f"Pays: {pays}")
-        add_text(f"Nationalité: {nationalite}")
+        data = [
+            ["Nom:", nom],
+            ["Prénom:", prenom],
+            ["Nom de jeune fille:", nom_jeune_fille],
+            ["Né(e) le:", str(date_naissance)],
+            ["Ville de naissance:", ville_naissance],
+            ["Département:", departement],
+            ["Pays:", pays],
+            ["Nationalité:", nationalite]
+        ]
+        
+        t = Table(data, colWidths=[150, 300])
+        t.setStyle(TableStyle([
+            ('FONT', (0, 0), (-1, -1), 'Helvetica', 11),
+            ('FONT', (0, 0), (0, -1), 'Helvetica-Bold', 11),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
+            ('BOX', (0, 0), (-1, -1), 1, colors.black),
+            ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey)
+        ]))
+        
+        elements.append(t)
+        elements.append(Spacer(1, 3*mm))
         
         # Coordonnées
-        add_text("Coordonnées", size=12, bold=True)
+        elements.append(Paragraph("Coordonnées", ParagraphStyle(name='SubHeading', 
+                                                            parent=styles['Heading2'], 
+                                                            textColor=orpi_red)))
+        
         adresse_actuelle = st.session_state.get(f"adresse_{i}", "")
         cp_actuel = st.session_state.get(f"cp_{i}", "")
         ville_actuelle = st.session_state.get(f"ville_{i}", "")
         telephone = st.session_state.get(f"tel_{i}", "")
         email = st.session_state.get(f"email_{i}", "")
         
-        add_text(f"Adresse actuelle: {adresse_actuelle}")
-        add_text(f"Code postal: {cp_actuel}")
-        add_text(f"Ville: {ville_actuelle}")
-        add_text(f"Téléphone: {telephone}")
-        add_text(f"Email: {email}")
+        data = [
+            ["Adresse actuelle:", adresse_actuelle],
+            ["Code postal:", cp_actuel],
+            ["Ville:", ville_actuelle],
+            ["Téléphone:", telephone],
+            ["Email:", email]
+        ]
+        
+        t = Table(data, colWidths=[150, 300])
+        t.setStyle(TableStyle([
+            ('FONT', (0, 0), (-1, -1), 'Helvetica', 11),
+            ('FONT', (0, 0), (0, -1), 'Helvetica-Bold', 11),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
+            ('BOX', (0, 0), (-1, -1), 1, colors.black),
+            ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey)
+        ]))
+        
+        elements.append(t)
+        elements.append(Spacer(1, 3*mm))
         
         # Enfants
         nb_enfants = st.session_state.get(f"nb_enfants_{i}", 0)
-        add_text(f"Nombre d'enfants au foyer: {nb_enfants}")
+        age_enfants = st.session_state.get(f"age_enfants_{i}", "") if nb_enfants > 0 else ""
+        
+        data = [
+            ["Nombre d'enfants au foyer:", str(nb_enfants)],
+            ["Age des enfants:", age_enfants] if nb_enfants > 0 else ["", ""]
+        ]
+        
         if nb_enfants > 0:
-            age_enfants = st.session_state.get(f"age_enfants_{i}", "")
-            add_text(f"Age des enfants: {age_enfants}")
+            t = Table(data, colWidths=[150, 300])
+            t.setStyle(TableStyle([
+                ('FONT', (0, 0), (-1, -1), 'Helvetica', 11),
+                ('FONT', (0, 0), (0, -1), 'Helvetica-Bold', 11),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
+                ('BOX', (0, 0), (-1, -1), 1, colors.black),
+                ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey)
+            ]))
+            elements.append(t)
+        else:
+            t = Table([data[0]], colWidths=[150, 300])
+            t.setStyle(TableStyle([
+                ('FONT', (0, 0), (-1, -1), 'Helvetica', 11),
+                ('FONT', (0, 0), (0, -1), 'Helvetica-Bold', 11),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
+                ('BOX', (0, 0), (-1, -1), 1, colors.black),
+                ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey)
+            ]))
+            elements.append(t)
+        
+        elements.append(Spacer(1, 3*mm))
         
         # Situation professionnelle
-        add_text("Situation professionnelle", size=12, bold=True)
+        elements.append(Paragraph("Situation professionnelle", ParagraphStyle(name='SubHeading', 
+                                                                        parent=styles['Heading2'], 
+                                                                        textColor=orpi_red)))
+        
         profession = st.session_state.get(f"profession_{i}", "")
         anciennete = st.session_state.get(f"anciennete_{i}", "")
         employeur = st.session_state.get(f"employeur_{i}", "")
@@ -409,58 +604,131 @@ def generer_pdf():
         ville_entreprise = st.session_state.get(f"ville_entreprise_{i}", "")
         tel_employeur = st.session_state.get(f"tel_employeur_{i}", "")
         
-        add_text(f"Profession: {profession}")
-        add_text(f"Ancienneté: {anciennete}")
-        add_text(f"Employeur: {employeur}")
-        add_text(f"Adresse entreprise: {adresse_entreprise}")
-        add_text(f"Code postal: {cp_entreprise}")
-        add_text(f"Ville: {ville_entreprise}")
-        add_text(f"Téléphone employeur: {tel_employeur}")
+        data = [
+            ["Profession:", profession],
+            ["Ancienneté:", anciennete],
+            ["Employeur:", employeur],
+            ["Adresse entreprise:", adresse_entreprise],
+            ["Code postal:", cp_entreprise],
+            ["Ville:", ville_entreprise],
+            ["Téléphone employeur:", tel_employeur]
+        ]
+        
+        t = Table(data, colWidths=[150, 300])
+        t.setStyle(TableStyle([
+            ('FONT', (0, 0), (-1, -1), 'Helvetica', 11),
+            ('FONT', (0, 0), (0, -1), 'Helvetica-Bold', 11),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
+            ('BOX', (0, 0), (-1, -1), 1, colors.black),
+            ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey)
+        ]))
+        
+        elements.append(t)
+        elements.append(Spacer(1, 3*mm))
         
         # Ressources
-        add_text("Ressources", size=12, bold=True)
+        elements.append(Paragraph("Ressources", ParagraphStyle(name='SubHeading', 
+                                                          parent=styles['Heading2'], 
+                                                          textColor=orpi_red)))
+        
         revenus = st.session_state.get(f"revenus_{i}", 0)
         autres_revenus = st.session_state.get(f"autres_revenus_{i}", 0)
         total_revenus = revenus + autres_revenus
         
-        add_text(f"Revenus mensuels: {revenus} EUR")
-        add_text(f"Autres revenus: {autres_revenus} EUR")
-        add_text(f"Total revenus: {total_revenus} EUR")
+        data = [
+            ["Revenus mensuels:", f"{revenus} €"],
+            ["Autres revenus:", f"{autres_revenus} €"],
+            ["Total revenus:", f"{total_revenus} €"]
+        ]
         
-        # Signature (mentions)
-        add_text("Signature", size=12, bold=True)
-        add_text("Je soussigné(e) certifie que les renseignements ci-dessus sont sincères et véritables.")
+        t = Table(data, colWidths=[150, 300])
+        t.setStyle(TableStyle([
+            ('FONT', (0, 0), (-1, -1), 'Helvetica', 11),
+            ('FONT', (0, 0), (0, -1), 'Helvetica-Bold', 11),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
+            ('BOX', (0, 0), (-1, -1), 1, colors.black),
+            ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey),
+            ('BACKGROUND', (0, 2), (-1, 2), colors.lightgrey)
+        ]))
+        
+        elements.append(t)
+        elements.append(Spacer(1, 5*mm))
+        
+        # Signature
+        elements.append(Paragraph("Je soussigné(e) certifie que les renseignements ci-dessus sont sincères et véritables.", styles['Normal']))
         date_signature = st.session_state.get("date_sig_loc", "")
-        add_text(f"Fait à Limoges, le {date_signature}")
+        elements.append(Paragraph(f"Fait à Limoges, le {date_signature}", styles['Normal']))
         
-        # Nouvelle page pour le prochain locataire s'il y en a
+        # Espace pour signature
+        elements.append(Spacer(1, 20*mm))
+        
+        # Saut de page pour le prochain locataire s'il y en a
         if i < int(nb_locataires) - 1:
-            c.showPage()
-            y_position = height - 50
+            elements.append(Paragraph("<br/><br/><br/>", styles['Normal']))
     
     # --- PARTIE GARANTS ---
-    c.showPage()  # Nouvelle page
-    y_position = height - 50
-    add_text("DOSSIER GARANTS", size=16, bold=True)
-    add_text(f"Nombre de garants: {nb_garants}")
-    y_position -= 10
+    elements.append(Paragraph("<br/><br/><br/>", styles['Normal']))
+    elements.append(Paragraph("DOSSIER GARANTS", styles['Heading1']))
+    elements.append(Paragraph(f"Nombre de garants: {nb_garants}", styles['Normal']))
+    elements.append(Spacer(1, 5*mm))
     
     # Pour chaque garant (code similaire à celui des locataires)
     for i in range(int(nb_garants)):
-        add_text(f"GARANT {i+1}", size=14, bold=True)
+        elements.append(Paragraph(f"GARANT {i+1}", styles['Heading2']))
+        elements.append(Spacer(1, 3*mm))
+        
+        # [Structure similaire aux locataires avec sous-sections et tableaux]
+        # ...
         
         # Situation familiale
-        add_text("Situation familiale", size=12, bold=True)
+        elements.append(Paragraph("Situation familiale", ParagraphStyle(name='SubHeading', 
+                                                                     parent=styles['Heading2'], 
+                                                                     textColor=orpi_red)))
+        
         situation_garant = st.session_state.get(f"situation_garant_{i}", "")
-        add_text(f"État civil: {situation_garant}")
+        data = [["État civil:", situation_garant]]
+        
+        t = Table(data, colWidths=[150, 300])
+        t.setStyle(TableStyle([
+            ('FONT', (0, 0), (-1, -1), 'Helvetica', 11),
+            ('FONT', (0, 0), (0, -1), 'Helvetica-Bold', 11),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
+            ('BOX', (0, 0), (-1, -1), 1, colors.black),
+            ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey)
+        ]))
+        
+        elements.append(t)
+        elements.append(Spacer(1, 3*mm))
         
         # Domicile actuel
-        add_text("Domicile actuel", size=12, bold=True)
+        elements.append(Paragraph("Domicile actuel", ParagraphStyle(name='SubHeading', 
+                                                                 parent=styles['Heading2'], 
+                                                                 textColor=orpi_red)))
+        
         domicile_garant = st.session_state.get(f"domicile_garant_{i}", "")
-        add_text(f"Situation actuelle: {domicile_garant}")
+        data = [["Situation actuelle:", domicile_garant]]
+        
+        t = Table(data, colWidths=[150, 300])
+        t.setStyle(TableStyle([
+            ('FONT', (0, 0), (-1, -1), 'Helvetica', 11),
+            ('FONT', (0, 0), (0, -1), 'Helvetica-Bold', 11),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
+            ('BOX', (0, 0), (-1, -1), 1, colors.black),
+            ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey)
+        ]))
+        
+        elements.append(t)
+        elements.append(Spacer(1, 3*mm))
         
         # Civilité
-        add_text("Civilité", size=12, bold=True)
+        elements.append(Paragraph("Civilité", ParagraphStyle(name='SubHeading', 
+                                                         parent=styles['Heading2'], 
+                                                         textColor=orpi_red)))
+        
         nom_garant = st.session_state.get(f"nom_garant_{i}", "")
         prenom_garant = st.session_state.get(f"prenom_garant_{i}", "")
         nom_jf_garant = st.session_state.get(f"nom_jf_garant_{i}", "")
@@ -470,53 +738,62 @@ def generer_pdf():
         pays_garant = st.session_state.get(f"pays_garant_{i}", "")
         nationalite_garant = st.session_state.get(f"nationalite_garant_{i}", "")
         
-        add_text(f"Nom: {nom_garant}")
-        add_text(f"Prénom: {prenom_garant}")
-        add_text(f"Nom de jeune fille: {nom_jf_garant}")
-        add_text(f"Né(e) le: {date_naissance_garant}")
-        add_text(f"Ville de naissance: {ville_naissance_garant}")
-        add_text(f"Département: {departement_garant}")
-        add_text(f"Pays: {pays_garant}")
-        add_text(f"Nationalité: {nationalite_garant}")
+        data = [
+            ["Nom:", nom_garant],
+            ["Prénom:", prenom_garant],
+            ["Nom de jeune fille:", nom_jf_garant],
+            ["Né(e) le:", str(date_naissance_garant)],
+            ["Ville de naissance:", ville_naissance_garant],
+            ["Département:", departement_garant],
+            ["Pays:", pays_garant],
+            ["Nationalité:", nationalite_garant]
+        ]
         
-        # Ajouter le reste des informations des garants...
-        # (code similaire aux locataires)
+        t = Table(data, colWidths=[150, 300])
+        t.setStyle(TableStyle([
+            ('FONT', (0, 0), (-1, -1), 'Helvetica', 11),
+            ('FONT', (0, 0), (0, -1), 'Helvetica-Bold', 11),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.lightgrey),
+            ('BOX', (0, 0), (-1, -1), 1, colors.black),
+            ('BACKGROUND', (0, 0), (0, -1), colors.lightgrey)
+        ]))
         
-        # Nouvelle page pour le prochain garant s'il y en a
+        elements.append(t)
+        elements.append(Spacer(1, 3*mm))
+        
+        # Autres sections pour les garants...
+        # (Structure similaire à celle des locataires)
+        
+        # Signature
+        elements.append(Paragraph("Je soussigné(e) certifie que les renseignements ci-dessus sont sincères et véritables.", styles['Normal']))
+        date_signature_garant = st.session_state.get("date_sig_garant", "")
+        elements.append(Paragraph(f"Fait à Limoges, le {date_signature_garant}", styles['Normal']))
+        
+        # Espace pour signature
+        elements.append(Spacer(1, 20*mm))
+        
+        # Saut de page pour le prochain garant s'il y en a
         if i < int(nb_garants) - 1:
-            c.showPage()
-            y_position = height - 50
+            elements.append(Paragraph("<br/><br/><br/>", styles['Normal']))
     
     # Mentions légales
-    c.showPage()
-    y_position = height - 50
-    add_text("MENTIONS LÉGALES", size=14, bold=True)
-    add_text("Les informations recueillies font l'objet d'un traitement informatique nécessaire à l'exécution")
-    add_text("des missions de l'agent immobilier. Conformément à la loi informatique et libertés")
-    add_text("du 6 janvier 1978 modifiée, les candidats bénéficient d'un droit d'accès, de rectification")
-    add_text("et de suppression des informations qui les concernent. Pour exercer ce droit, les parties")
-    add_text("peuvent s'adresser à l'Agence.")
-    y_position -= 10
-    add_text("Important : tout dossier incomplet ne peut être soumis à l'étude pour validation.", bold=True)
+    elements.append(Paragraph("<br/><br/><br/>", styles['Normal']))
+    elements.append(Paragraph("MENTIONS LÉGALES", styles['Heading1']))
+    elements.append(Paragraph("""
+    Les informations recueillies font l'objet d'un traitement informatique nécessaire à l'exécution des missions de l'agent immobilier. 
+    Conformément à la loi informatique et libertés du 6 janvier 1978 modifiée, les candidats bénéficient d'un droit d'accès, 
+    de rectification et de suppression des informations qui les concernent. Pour exercer ce droit, 
+    les parties peuvent s'adresser à l'Agence.
+    """, styles['Normal']))
     
-    c.save()
+    elements.append(Spacer(1, 5*mm))
+    elements.append(Paragraph("Important : tout dossier incomplet ne peut être soumis à l'étude pour validation.", 
+                             ParagraphStyle(name='Warning', parent=styles['Normal'], 
+                                           textColor=orpi_red, fontName='Helvetica-Bold')))
+    
+    # Construire le document
+    doc.build(elements, onFirstPage=add_orpi_header, onLaterPages=add_orpi_header)
+    
     buffer.seek(0)
     return buffer.getvalue()
-
-# Ajouter ceci à la fin de votre app.py, après les mentions légales
-st.markdown("---")
-
-# Bouton pour générer et télécharger le PDF
-if st.button("Générer et télécharger le formulaire PDF"):
-    try:
-        pdf_bytes = generer_pdf()
-        st.download_button(
-            label="Télécharger le PDF",
-            data=pdf_bytes,
-            file_name="formulaire_location.pdf",
-            mime="application/pdf"
-        )
-        # Afficher un message de confirmation
-        st.success("Le PDF a été généré avec succès !")
-    except Exception as e:
-        st.error(f"Erreur lors de la génération du PDF: {str(e)}")
