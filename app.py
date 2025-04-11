@@ -297,14 +297,14 @@ def generer_pdf():
     doc = SimpleDocTemplate(buffer, pagesize=A4, 
                           rightMargin=20*mm, leftMargin=20*mm,
                           topMargin=30*mm, bottomMargin=20*mm)
-    
+
+
     # Définir les styles
     styles = getSampleStyleSheet()
-    styles.add(ParagraphStyle(name='Title',
-                            fontName='Helvetica-Bold',
-                            fontSize=18,
-                            alignment=1,  # 0=left, 1=center, 2=right
-                            spaceAfter=10*mm))
+    # Modifier le style Title existant au lieu d'en ajouter un nouveau
+    styles['Title'].fontSize = 18
+    styles['Title'].alignment = 1  # 0=left, 1=center, 2=right
+    styles['Title'].spaceAfter = 10*mm
     
     styles.add(ParagraphStyle(name='Heading1',
                             fontName='Helvetica-Bold',
