@@ -301,31 +301,45 @@ def generer_pdf():
 
     # Définir les styles
     styles = getSampleStyleSheet()
-    # Modifier le style Title existant au lieu d'en ajouter un nouveau
+    # Modifier les styles existants
     styles['Title'].fontSize = 18
     styles['Title'].alignment = 1  # 0=left, 1=center, 2=right
     styles['Title'].spaceAfter = 10*mm
     
-    styles.add(ParagraphStyle(name='Heading1',
-                            fontName='Helvetica-Bold',
-                            fontSize=16,
-                            leading=20,
-                            spaceBefore=5*mm,
-                            spaceAfter=5*mm))
+    # Modifier Heading1 au lieu d'en ajouter un nouveau
+    styles['Heading1'].fontName = 'Helvetica-Bold'
+    styles['Heading1'].fontSize = 16
+    styles['Heading1'].leading = 20
+    styles['Heading1'].spaceBefore = 5*mm
+    styles['Heading1'].spaceAfter = 5*mm
     
-    styles.add(ParagraphStyle(name='Heading2',
-                            fontName='Helvetica-Bold',
-                            fontSize=14,
-                            leading=18,
-                            spaceBefore=3*mm,
-                            spaceAfter=3*mm))
+    # Modifier Heading2 au lieu d'en ajouter un nouveau
+    styles['Heading2'].fontName = 'Helvetica-Bold'
+    styles['Heading2'].fontSize = 14
+    styles['Heading2'].leading = 18
+    styles['Heading2'].spaceBefore = 3*mm
+    styles['Heading2'].spaceAfter = 3*mm
     
-    styles.add(ParagraphStyle(name='Normal',
-                            fontName='Helvetica',
-                            fontSize=11,
-                            leading=16,
-                            spaceBefore=1*mm,
-                            spaceAfter=1*mm))
+    # Modifier Normal au lieu d'en ajouter un nouveau
+    styles['Normal'].fontName = 'Helvetica'
+    styles['Normal'].fontSize = 11
+    styles['Normal'].leading = 16
+    styles['Normal'].spaceBefore = 1*mm
+    styles['Normal'].spaceAfter = 1*mm
+    
+    # Ajouter des styles personnalisés
+    styles.add(ParagraphStyle(
+        name='SubHeading', 
+        parent=styles['Heading2'],
+        textColor=orpi_red
+    ))
+    
+    styles.add(ParagraphStyle(
+        name='Warning',
+        parent=styles['Normal'],
+        textColor=orpi_red,
+        fontName='Helvetica-Bold'
+    ))
     
     # Couleur Orpi pour les titres
     orpi_red = colors.HexColor('#ec1f26')
