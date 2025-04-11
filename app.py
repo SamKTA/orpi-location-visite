@@ -298,6 +298,8 @@ def generer_pdf():
                           rightMargin=20*mm, leftMargin=20*mm,
                           topMargin=30*mm, bottomMargin=20*mm)
 
+    # Couleur Orpi pour les titres
+    orpi_red = colors.HexColor('#ec1f26')
 
     # Définir les styles
     styles = getSampleStyleSheet()
